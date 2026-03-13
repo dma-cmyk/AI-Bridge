@@ -1,0 +1,36 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        { "header": "X-Frame-Options", "operation": "remove" },
+        { "header": "Content-Security-Policy", "operation": "remove" },
+        { "header": "Cross-Origin-Opener-Policy", "operation": "remove" },
+        { "header": "Cross-Origin-Embedder-Policy", "operation": "remove" },
+        { "header": "Cross-Origin-Resource-Policy", "operation": "remove" },
+        { "header": "Permissions-Policy", "operation": "remove" }
+      ]
+    },
+    "condition": {
+      "urlFilter": "*",
+      "requestDomains": [
+        "gemini.google.com",
+        "chatgpt.com",
+        "claude.ai",
+        "grok.com",
+        "chat.deepseek.com",
+        "chat.qwen.ai",
+        "venice.ai",
+        "chat.webllm.ai",
+        "copilot.microsoft.com",
+        "duck.ai",
+        "duckduckgo.com",
+        "huggingface.co",
+        "tongyi.aliyun.com"
+      ],
+      "resourceTypes": ["sub_frame"]
+    }
+  }
+]

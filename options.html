@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>G-Bridge 設定</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 24px;
+      margin: 0;
+      background-color: #f8f9fa;
+      color: #202124;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      padding: 32px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 24px;
+      margin-top: 0;
+      margin-bottom: 24px;
+      color: #1a73e8;
+    }
+    .setting-group {
+      margin-bottom: 24px;
+    }
+    .setting-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .help-text {
+      font-size: 13px;
+      color: #5f6368;
+      margin-top: 4px;
+      margin-bottom: 12px;
+    }
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 16px;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+      background-color: white;
+    }
+    textarea {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-family: monospace;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+      box-sizing: border-box;
+      resize: vertical;
+      background-color: #f8f9fa;
+    }
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .radio-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .radio-option input[type="radio"] {
+      margin-top: 3px;
+    }
+    .radio-option div {
+      display: flex;
+      flex-direction: column;
+    }
+    .radio-option span {
+      font-weight: 500;
+    }
+    #save-btn {
+      background: #1a73e8;
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 4px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: background 0.2s;
+    }
+    #save-btn:hover {
+      background: #1557b0;
+    }
+    #status {
+      display: inline-block;
+      margin-left: 16px;
+      color: #0f9d58;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    #status.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI-Bridge 設定</h1>
+    
+    <div class="setting-group">
+      <label for="ai-service">デフォルトで使用するAI</label>
+      <div class="help-text">サイドパネルを開いた時に最初に表示されるAIを選択します。</div>
+      <select id="ai-service">
+        <!-- Options will be populated from JS -->
+      </select>
+    </div>
+
+    <div class="setting-group">
+      <label for="custom-ai-list">カスタムAIリスト</label>
+      <div class="help-text">
+        使いたいAIを「名前,URL」の形式で1行ずつ入力してリストを編集できます。<br>
+        ※サイト側でセキュリティロック（iframe拒否）が掛かっている場合、ここに追加しても表示されません。
+      </div>
+      <textarea id="custom-ai-list" rows="8"></textarea>
+      <button id="reset-ai-btn" style="margin-top: 8px; font-size: 13px; padding: 4px 8px; cursor: pointer;">デフォルトのリストに戻す</button>
+    </div>
+
+    <div class="setting-group">
+      <label>データ抽出形式</label>
+      <div class="help-text">AIに渡すテキストデータの形式を選択します。</div>
+      <div class="radio-group">
+        <label class="radio-option">
+          <input type="radio" name="text-format" value="html" checked>
+          <div>
+            <span>HTMLソースコード (詳細)</span>
+            <span class="help-text" style="margin: 0;">ページの構造をそのまま渡します。AIがレイアウトを理解するのに適しています。</span>
+          </div>
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="text-format" value="markdown">
+          <div>
+            <span>マークダウン形式 (クリーン)</span>
+            <span class="help-text" style="margin: 0;">タグを除去し、読みやすく整形したテキストを渡します。トークン節約に効果的です。</span>
+          </div>
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="text-format" value="main">
+          <div>
+            <span>本文のみ抽出 (要約向け・強力)</span>
+            <span class="help-text" style="margin: 0;">記事の本文と思われる部分だけを賢く特定して抽出します。最も劇的に情報を圧縮できます。</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <label>スクリーンショットの取得範囲</label>
+      <div class="help-text">クリップボードにコピーされる画像の範囲を設定します。テキスト（HTMLソースコード）は常にページ全体が取得されます。</div>
+      <div class="radio-group">
+        <label class="radio-option">
+          <input type="radio" name="capture-mode" value="visible" checked>
+          <div>
+            <span>見えている範囲のみ (推奨・高速)</span>
+            <span class="help-text" style="margin: 0;">画面に表示されている部分だけを1秒未満で瞬時に撮影します。</span>
+          </div>
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="capture-mode" value="fullpage">
+          <div>
+            <span>ページ全体 (自動スクロール・低速)</span>
+            <span class="help-text" style="margin: 0;">自動で下までスクロールして撮影し結合します。完了まで数秒かかります。</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div>
+      <button id="save-btn">設定を保存</button>
+      <span id="status">保存しました</span>
+    </div>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>

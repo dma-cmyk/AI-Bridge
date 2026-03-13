@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "AI-Bridge (Side Panel Edition)",
+  "short_name": "AI-Bridge",
+  "version": "1.0",
+  "description": "閲覧中のページのソースコードとスクリーンショットを取得し、サイドパネルのGeminiへ転送します。",
+  "permissions": [
+    "sidePanel",
+    "contextMenus",
+    "scripting",
+    "activeTab",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "clipboardWrite",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_page": "options.html",
+  "side_panel": {
+    "default_path": "side_panel.html"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "action": {
+    "default_title": "Gemini表示"
+  }
+}

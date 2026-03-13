@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>AI-Bridge Side Panel</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #f0f4f9;
+      font-family: sans-serif;
+    }
+    #gemini-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    #gemini-frame.loaded {
+      opacity: 1;
+    }
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(240, 244, 249, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: opacity 0.3s ease;
+    }
+    .spinner {
+      border: 4px solid #e0e0e0;
+      border-top: 4px solid #1a73e8;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    #status-text {
+      color: #5f6368;
+      font-size: 14px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay">
+    <div class="spinner"></div>
+    <div id="status-text">AIを準備中...</div>
+  </div>
+  <iframe id="gemini-frame" allow="clipboard-read; clipboard-write"></iframe>
+  <script src="side_panel.js"></script>
+</body>
+</html>
