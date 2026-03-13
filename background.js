@@ -239,6 +239,24 @@ async function performExtraction(tab, selectionText) {
     chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: (imgDataUrl, extractedData, format) => {
+        if (format === 'image') {
+          // 画像のみ取得モード
+          if (!imgDataUrl) {
+            console.warn('[AI-Bridge] Image data is missing in image-only mode');
+            return;
+          }
+          fetch(imgDataUrl)
+            .then(res => res.blob())
+            .then(blob => {
+              const items = {};
+              items[blob.type] = blob;
+              return navigator.clipboard.write([new ClipboardItem(items)]);
+            })
+            .then(() => console.log('[AI-Bridge] Image only copied to clipboard'))
+            .catch(e => console.warn('[AI-Bridge] Clipboard write failed', e));
+          return;
+        }
+
         let markdownText = `以下のページについて質問/指示があります。\n\n`;
         markdownText += `**Title:** ${extractedData.title}\n**URL:** ${extractedData.url}\n\n`;
         
