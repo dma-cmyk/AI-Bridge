@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "AI-Bridge (Side Panel Edition)",
   "short_name": "AI-Bridge",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "閲覧中のページのソースコードとスクリーンショットを取得し、サイドパネルのGeminiへ転送します。",
   "icons": {
     "16": "icons/icon16.png",

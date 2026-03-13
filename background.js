@@ -1,7 +1,7 @@
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: 'send-to-gemini',
-    title: 'AIとのチャットをサイドパネルで開く',
+    title: 'AIにこのページ情報をコピーして開く',
     contexts: ['page', 'selection', 'action']
   });
 });
@@ -9,14 +9,14 @@ chrome.runtime.onInstalled.addListener(() => {
 // アイコンクリック時の挙動 (setPanelBehaviorを外したためここで発火する)
 chrome.action.onClicked.addListener((tab) => {
   chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
-  performExtraction(tab, '');
+  // アイコンクリック（左クリック）時はサイドパネルを開くだけ
 });
 
 // 右クリック時の挙動
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'send-to-gemini') {
     chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
-    // 右クリックからはキャプチャを行わない（アイコンクリックのみ自動）
+    performExtraction(tab, info.selectionText);
   }
 });
 
