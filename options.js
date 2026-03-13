@@ -57,13 +57,28 @@ document.addEventListener('DOMContentLoaded', () => {
     for (const radio of captureModeRadios) {
       if (radio.value === items.captureMode) {
         radio.checked = true;
+        radio.closest('.radio-card').classList.add('active');
       }
     }
     for (const radio of textFormatRadios) {
       if (radio.value === items.textFormat) {
         radio.checked = true;
+        radio.closest('.radio-card').classList.add('active');
       }
     }
+  });
+
+  // Radio card selection logic
+  const allRadioCards = document.querySelectorAll('.radio-card');
+  allRadioCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const input = card.querySelector('input');
+      const siblings = card.parentElement.querySelectorAll('.radio-card');
+      
+      siblings.forEach(s => s.classList.remove('active'));
+      card.classList.add('active');
+      input.checked = true;
+    });
   });
 
   // Reset AI list

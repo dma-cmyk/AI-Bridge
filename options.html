@@ -1,187 +1,383 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>G-Bridge 設定</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-Bridge 設定</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg-gradient: linear-gradient(135deg, #f5f7ff 0%, #eef2ff 100%);
+      --glass-bg: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.5);
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      --input-bg: rgba(255, 255, 255, 0.8);
+    }
+
+    * {
+      box-sizing: border-box;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      padding: 24px;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
       margin: 0;
-      background-color: #f8f9fa;
-      color: #202124;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
+
+    .background-blob {
+      position: fixed;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(79, 70, 229, 0.1) 0%, rgba(79, 70, 229, 0) 70%);
+      filter: blur(80px);
+      z-index: -1;
+      border-radius: 50%;
+    }
+
+    .blob-1 { top: -10%; left: -10%; }
+    .blob-2 { bottom: -10%; right: -10%; }
+
     .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background: white;
-      padding: 32px;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 680px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: var(--card-shadow);
+      animation: slideUp 0.6s ease-out;
     }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    header {
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
     h1 {
-      font-size: 24px;
-      margin-top: 0;
-      margin-bottom: 24px;
-      color: #1a73e8;
+      font-family: 'Outfit', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      background: linear-gradient(to right, #4f46e5, #818cf8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin: 0;
+    }
+
     .setting-group {
-      margin-bottom: 24px;
+      margin-bottom: 32px;
+      background: rgba(255, 255, 255, 0.4);
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    .setting-group label {
+
+    .setting-group label.group-title {
       display: block;
-      font-weight: bold;
+      font-weight: 600;
+      font-size: 16px;
       margin-bottom: 8px;
+      color: var(--text-main);
     }
+
     .help-text {
       font-size: 13px;
-      color: #5f6368;
-      margin-top: 4px;
-      margin-bottom: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 16px;
     }
-    select {
+
+    select, textarea {
       width: 100%;
-      padding: 8px 12px;
-      font-size: 16px;
-      border: 1px solid #dadce0;
-      border-radius: 4px;
-      background-color: white;
+      background: var(--input-bg);
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 15px;
+      color: var(--text-main);
+      outline: none;
     }
+
+    select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+      background: white;
+    }
+
     textarea {
-      width: 100%;
-      padding: 8px 12px;
-      font-size: 14px;
-      font-family: monospace;
-      border: 1px solid #dadce0;
-      border-radius: 4px;
-      box-sizing: border-box;
+      font-family: 'ui-monospace', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
       resize: vertical;
-      background-color: #f8f9fa;
+      min-height: 120px;
     }
-    .radio-group {
-      display: flex;
-      flex-direction: column;
+
+    .radio-grid {
+      display: grid;
       gap: 12px;
     }
-    .radio-option {
+
+    .radio-card {
+      position: relative;
       display: flex;
-      align-items: flex-start;
-      gap: 8px;
+      padding: 16px;
+      background: white;
+      border: 2px solid transparent;
+      border-radius: 12px;
+      cursor: pointer;
+      user-select: none;
     }
-    .radio-option input[type="radio"] {
-      margin-top: 3px;
+
+    .radio-card:hover {
+      transform: scale(1.01);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
     }
-    .radio-option div {
+
+    .radio-card input {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .radio-card .checked-icon {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #e2e8f0;
+      border-radius: 50%;
+      margin-right: 12px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .radio-card .checked-icon::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background: var(--primary);
+      border-radius: 50%;
+      transform: scale(0);
+      transition: transform 0.2s ease;
+    }
+
+    .radio-card input:checked ~ .checked-icon {
+      border-color: var(--primary);
+    }
+
+    .radio-card input:checked ~ .checked-icon::after {
+      transform: scale(1);
+    }
+
+    .radio-card input:checked ~ .card-content span {
+      color: var(--primary);
+    }
+
+    .radio-card.active {
+      border-color: var(--primary);
+      background: rgba(79, 70, 229, 0.02);
+    }
+
+    .card-content {
       display: flex;
       flex-direction: column;
     }
-    .radio-option span {
-      font-weight: 500;
-    }
-    #save-btn {
-      background: #1a73e8;
-      color: white;
-      border: none;
-      padding: 10px 24px;
-      border-radius: 4px;
+
+    .card-content .card-title {
+      font-weight: 600;
       font-size: 15px;
-      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .card-content .card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 40px;
+    }
+
+    button {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
       cursor: pointer;
-      margin-top: 16px;
-      transition: background 0.2s;
+      border-radius: 12px;
+      border: none;
     }
+
+    #save-btn {
+      background: var(--primary);
+      color: white;
+      padding: 14px 32px;
+      font-size: 16px;
+      box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39);
+    }
+
     #save-btn:hover {
-      background: #1557b0;
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.23);
     }
+
+    #save-btn:active {
+      transform: translateY(0);
+    }
+
+    #reset-ai-btn {
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 14px;
+      padding: 8px 0;
+      text-decoration: underline;
+    }
+
+    #reset-ai-btn:hover {
+      color: var(--primary);
+    }
+
     #status {
-      display: inline-block;
-      margin-left: 16px;
-      color: #0f9d58;
-      font-weight: 500;
-      opacity: 0;
-      transition: opacity 0.3s;
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #10b981;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-weight: 600;
+      box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
+
     #status.show {
-      opacity: 1;
+      transform: translateX(-50%) translateY(0);
     }
   </style>
 </head>
 <body>
+  <div class="background-blob blob-1"></div>
+  <div class="background-blob blob-2"></div>
+
   <div class="container">
-    <h1>AI-Bridge 設定</h1>
-    
+    <header>
+      <h1>AI-Bridge Settings</h1>
+      <p>AIプラットフォームへの橋渡しをカスタマイズします</p>
+    </header>
+
     <div class="setting-group">
-      <label for="ai-service">デフォルトで使用するAI</label>
-      <div class="help-text">サイドパネルを開いた時に最初に表示されるAIを選択します。</div>
+      <label class="group-title">デフォルトAI</label>
+      <div class="help-text">サイドパネル起動時に最初に表示されるAI環境を選択します。</div>
       <select id="ai-service">
         <!-- Options will be populated from JS -->
       </select>
     </div>
 
     <div class="setting-group">
-      <label for="custom-ai-list">カスタムAIリスト</label>
+      <label class="group-title">カスタムAIリスト</label>
       <div class="help-text">
         使いたいAIを「名前,URL」の形式で1行ずつ入力してリストを編集できます。<br>
-        ※サイト側でセキュリティロック（iframe拒否）が掛かっている場合、ここに追加しても表示されません。
+        ※サイト側でiframeの表示を制限している場合は、表示できません。
       </div>
-      <textarea id="custom-ai-list" rows="8"></textarea>
-      <button id="reset-ai-btn" style="margin-top: 8px; font-size: 13px; padding: 4px 8px; cursor: pointer;">デフォルトのリストに戻す</button>
+      <textarea id="custom-ai-list" placeholder="Google Gemini,https://gemini.google.com/app..."></textarea>
+      <button id="reset-ai-btn">デフォルトのリストに戻す</button>
     </div>
 
     <div class="setting-group">
-      <label>データ抽出形式</label>
-      <div class="help-text">AIに渡すテキストデータの形式を選択します。</div>
-      <div class="radio-group">
-        <label class="radio-option">
-          <input type="radio" name="text-format" value="html" checked>
-          <div>
-            <span>HTMLソースコード (詳細)</span>
-            <span class="help-text" style="margin: 0;">ページの構造をそのまま渡します。AIがレイアウトを理解するのに適しています。</span>
+      <label class="group-title">データ抽出形式</label>
+      <div class="help-text">AIに渡すコンテキストの形式を選択します。</div>
+      <div class="radio-grid">
+        <label class="radio-card">
+          <input type="radio" name="text-format" value="html">
+          <div class="checked-icon"></div>
+          <div class="card-content">
+            <span class="card-title">HTMLソースコード</span>
+            <span class="card-desc">構造をそのまま維持します。AIによるレイアウト解析に最適です。</span>
           </div>
         </label>
-        <label class="radio-option">
+        <label class="radio-card">
           <input type="radio" name="text-format" value="markdown">
-          <div>
-            <span>マークダウン形式 (クリーン)</span>
-            <span class="help-text" style="margin: 0;">タグを除去し、読みやすく整形したテキストを渡します。トークン節約に効果的です。</span>
+          <div class="checked-icon"></div>
+          <div class="card-content">
+            <span class="card-title">マークダウン (推奨)</span>
+            <span class="card-desc">不要な情報を削ぎ落とし、読みやすく整形します。トークン節約に。</span>
           </div>
         </label>
-        <label class="radio-option">
+        <label class="radio-card">
           <input type="radio" name="text-format" value="main">
-          <div>
-            <span>本文のみ抽出 (要約向け・強力)</span>
-            <span class="help-text" style="margin: 0;">記事の本文と思われる部分だけを賢く特定して抽出します。最も劇的に情報を圧縮できます。</span>
+          <div class="checked-icon"></div>
+          <div class="card-content">
+            <span class="card-title">メインコンテンツのみ</span>
+            <span class="card-desc">記事の本文のみをAIが特定して抽出します。最も強力な要約向け。</span>
           </div>
         </label>
       </div>
     </div>
 
     <div class="setting-group">
-      <label>スクリーンショットの取得範囲</label>
-      <div class="help-text">クリップボードにコピーされる画像の範囲を設定します。テキスト（HTMLソースコード）は常にページ全体が取得されます。</div>
-      <div class="radio-group">
-        <label class="radio-option">
-          <input type="radio" name="capture-mode" value="visible" checked>
-          <div>
-            <span>見えている範囲のみ (推奨・高速)</span>
-            <span class="help-text" style="margin: 0;">画面に表示されている部分だけを1秒未満で瞬時に撮影します。</span>
+      <label class="group-title">スクリーンショット範囲</label>
+      <div class="help-text">AIに送信する視覚情報の範囲を決定します。</div>
+      <div class="radio-grid">
+        <label class="radio-card">
+          <input type="radio" name="capture-mode" value="visible">
+          <div class="checked-icon"></div>
+          <div class="card-content">
+            <span class="card-title">可視範囲のみ</span>
+            <span class="card-desc">現在表示されている部分を瞬時にキャプチャします。</span>
           </div>
         </label>
-        <label class="radio-option">
+        <label class="radio-card">
           <input type="radio" name="capture-mode" value="fullpage">
-          <div>
-            <span>ページ全体 (自動スクロール・低速)</span>
-            <span class="help-text" style="margin: 0;">自動で下までスクロールして撮影し結合します。完了まで数秒かかります。</span>
+          <div class="checked-icon"></div>
+          <div class="card-content">
+            <span class="card-title">ページ全体</span>
+            <span class="card-desc">自動スクロールを行い、ページ全域を1枚の画像にします。</span>
           </div>
         </label>
       </div>
     </div>
 
-    <div>
-      <button id="save-btn">設定を保存</button>
-      <span id="status">保存しました</span>
+    <div class="actions">
+      <div></div> <!-- spacer -->
+      <button id="save-btn">設定を保存する</button>
     </div>
   </div>
+
+  <div id="status">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+    </svg>
+    設定を保存しました
+  </div>
+
   <script src="options.js"></script>
 </body>
 </html>
