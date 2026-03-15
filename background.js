@@ -20,6 +20,11 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
 });
 
+// コンテンツスクリプトからのメッセージ受信（将来的な拡張用）
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  return true; 
+});
+
 async function performExtraction(tab, selectionText) {
   try {
     const { captureMode, textFormat } = await chrome.storage.sync.get({ captureMode: 'visible', textFormat: 'html' });

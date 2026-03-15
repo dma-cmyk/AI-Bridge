@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <title>AI-Bridge Side Panel</title>
   <style>
+    :root {
+      --header-bg: #ffffff;
+      --header-border: #e0e0e0;
+      --header-text: #3c4043;
+      --selector-bg: #f8f9fa;
+      --accent-color: #1a73e8;
+    }
     body, html {
       margin: 0;
       padding: 0;
@@ -12,10 +19,52 @@
       overflow: hidden;
       background-color: #f0f4f9;
       font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+    }
+    #header {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--header-border);
+      gap: 10px;
+      z-index: 20;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    #ai-selector {
+      flex: 1;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--header-border);
+      font-size: 13px;
+      outline: none;
+      background-color: var(--selector-bg);
+      color: var(--header-text);
+      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+    #ai-selector:focus {
+      border-color: var(--accent-color);
+    }
+    #settings-btn {
+      background: none;
+      border: none;
+      padding: 6px;
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--header-text);
+      transition: background 0.2s, color 0.2s;
+    }
+    #settings-btn:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--accent-color);
     }
     #gemini-frame {
       width: 100%;
-      height: 100%;
+      flex: 1;
       border: none;
       opacity: 0;
       transition: opacity 0.5s ease;
@@ -25,10 +74,10 @@
     }
     #overlay {
       position: absolute;
-      top: 0;
+      top: 45px; /* header height */
       left: 0;
       width: 100%;
-      height: 100%;
+      height: calc(100% - 45px);
       background: rgba(240, 244, 249, 0.9);
       display: flex;
       flex-direction: column;
@@ -39,7 +88,7 @@
     }
     .spinner {
       border: 4px solid #e0e0e0;
-      border-top: 4px solid #1a73e8;
+      border-top: 4px solid var(--accent-color);
       border-radius: 50%;
       width: 40px;
       height: 40px;
@@ -58,6 +107,17 @@
   </style>
 </head>
 <body>
+  <div id="header">
+    <select id="ai-selector">
+      <!-- ロード時に動的に生成 -->
+    </select>
+    <button id="settings-btn" title="設定を開く">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
   <div id="overlay">
     <div class="spinner"></div>
     <div id="status-text">AIを準備中...</div>
