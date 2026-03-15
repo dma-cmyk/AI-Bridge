@@ -180,4 +180,25 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.runtime.sendMessage({ action: 'SETTINGS_UPDATED', aiService, extensionTheme: selectedTheme });
     });
   }
+
+  // --- プライバシーと権限 ---
+  const openChromeSettingsBtn = document.getElementById('open-chrome-settings-btn');
+
+  openChromeSettingsBtn.addEventListener('click', () => {
+    const url = `chrome://settings/content/siteDetails?site=${encodeURIComponent('chrome-extension://' + chrome.runtime.id)}`;
+    chrome.tabs.create({ url: url });
+  });
+
+  // ハッシュ（#privacy）がある場合は該当セクションへジャンプ
+  if (window.location.hash === '#privacy') {
+    const privacySection = document.getElementById('privacy');
+    if (privacySection) {
+      setTimeout(() => {
+        privacySection.scrollIntoView({ behavior: 'smooth' });
+        // 視覚的に目立たせる
+        privacySection.style.boxShadow = '0 0 0 2px var(--primary)';
+        setTimeout(() => { privacySection.style.boxShadow = ''; }, 2000);
+      }, 500);
+    }
+  }
 });

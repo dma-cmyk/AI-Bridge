@@ -445,27 +445,19 @@
       </div>
     </div>
 
-    <div class="setting-group">
-      <label class="group-title">スクリーンショット範囲</label>
-      <div class="help-text">AIに送信する視覚情報の範囲を決定します。</div>
-      <div class="radio-grid">
-        <label class="radio-card">
-          <input type="radio" name="capture-mode" value="visible">
-          <div class="checked-icon"></div>
-          <div class="card-content">
-            <span class="card-title">可視範囲のみ</span>
-            <span class="card-desc">現在表示されている部分を瞬時にキャプチャします。</span>
-          </div>
-        </label>
-        <label class="radio-card">
-          <input type="radio" name="capture-mode" value="fullpage">
-          <div class="checked-icon"></div>
-          <div class="card-content">
-            <span class="card-title">ページ全体</span>
-            <span class="card-desc">自動スクロールを行い、ページ全域を1枚の画像にします。</span>
-          </div>
-        </label>
+    <div class="setting-group" id="privacy">
+      <label class="group-title">プライバシーと権限</label>
+      <div class="help-text">
+        マイク（音声入力）やその他の権限を管理するには、ブラウザのサイト設定を開いてください。
       </div>
+      <button id="open-chrome-settings-btn" class="secondary-btn" style="width: 100%; padding: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+        ブラウザのサイト詳細設定を開く
+      </button>
     </div>
 
     <div class="footer-note">
