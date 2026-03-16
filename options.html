@@ -407,6 +407,29 @@
     </div>
 
     <div class="setting-group">
+      <label class="group-title">キャプチャ範囲</label>
+      <div class="help-text">スクリーンショットを撮影する範囲を選択します。</div>
+      <div class="radio-grid">
+        <label class="radio-card">
+          <input type="radio" name="capture-mode" value="visible">
+          <div class="checked-icon"></div>
+          <div class="card-content">
+            <span class="card-title">表示範囲のみ</span>
+            <span class="card-desc">現在ブラウザで見えている範囲のみをキャプチャします。高速です。</span>
+          </div>
+        </label>
+        <label class="radio-card">
+          <input type="radio" name="capture-mode" value="fullpage">
+          <div class="checked-icon"></div>
+          <div class="card-content">
+            <span class="card-title">ページ全体</span>
+            <span class="card-desc">ページの上から下まで自動スクロールして結合キャプチャします。</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="setting-group">
       <label class="group-title">データ抽出形式</label>
       <div class="help-text">AIに渡すコンテキストの形式を選択します。</div>
       <div class="radio-grid">
