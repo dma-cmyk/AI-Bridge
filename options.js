@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const extensionThemeRadios = document.getElementsByName('extension-theme');
   const captureModeRadios = document.getElementsByName('capture-mode');
   const textFormatRadios = document.getElementsByName('text-format');
-  const saveBtn = document.getElementById('save-btn');
   const statusSpan = document.getElementById('status');
 
   function applyExtensionTheme(theme) {
@@ -36,6 +35,14 @@ document.addEventListener('DOMContentLoaded', () => {
       .map(line => {
         const [name, ...urlParts] = line.split(',');
         return { name: name.trim(), url: urlParts.join(',').trim() };
+      })
+      .filter(({ name, url }) => {
+        if (!name) return false;
+        try {
+          return new URL(url).protocol === 'https:';
+        } catch {
+          return false;
+        }
       });
   }
 
@@ -154,17 +161,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const aiListText = customAiListTextarea.value;
-    const aiService = aiServiceSelect.value;
+    const aiList = parseAiList(aiListText);
+    let aiService = aiServiceSelect.value;
 
-    chrome.storage.sync.set({
+    if (isAiListUpdate) {
+      if (aiList.length === 0) {
+        alert('有効なAIを「名前,https://URL」の形式で1件以上入力してください。');
+        return;
+      }
+      if (!aiList.some(ai => ai.name === aiService)) {
+        aiService = aiList[0].name;
+      }
+    }
+
+    const settings = {
       aiService: aiService,
       extensionTheme: selectedTheme,
       captureMode: selectedMode,
-      textFormat: selectedFormat,
-      customAiList: aiListText
-    }, () => {
+      textFormat: selectedFormat
+    };
+    if (isAiListUpdate) settings.customAiList = aiListText;
+
+    chrome.storage.sync.set(settings, () => {
+      if (chrome.runtime.lastError) {
+        alert(`設定を保存できませんでした: ${chrome.runtime.lastError.message}`);
+        return;
+      }
+
       if (isAiListUpdate) {
-        const aiList = parseAiList(aiListText);
         populateAiSelect(aiList, aiService);
       }
       
@@ -177,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 1500);
       
       // Request side panel reload for changes to take effect immediately
-      chrome.runtime.sendMessage({ action: 'SETTINGS_UPDATED', aiService, extensionTheme: selectedTheme });
+      chrome.runtime.sendMessage({ action: 'SETTINGS_UPDATED', aiService, extensionTheme: selectedTheme }).catch(() => {});
     });
   }
 

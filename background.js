@@ -1,8 +1,61 @@
+const AI_FRAME_DOMAINS = [
+  'gemini.google.com',
+  'chatgpt.com',
+  'claude.ai',
+  'grok.com',
+  'chat.deepseek.com',
+  'chat.qwen.ai',
+  'venice.ai',
+  'chat.webllm.ai',
+  'copilot.microsoft.com',
+  'duck.ai',
+  'duckduckgo.com',
+  'huggingface.co',
+  'tongyi.aliyun.com'
+];
+
+const AI_FRAME_RULE_ID = 1;
+const CAPTURE_INTERVAL_MS = 550;
+
+function createAiFrameRule(extensionId) {
+  return {
+    id: AI_FRAME_RULE_ID,
+    priority: 1,
+    action: {
+      type: 'modifyHeaders',
+      responseHeaders: [
+        { header: 'X-Frame-Options', operation: 'remove' },
+        { header: 'Content-Security-Policy', operation: 'remove' },
+        { header: 'Cross-Origin-Opener-Policy', operation: 'remove' },
+        { header: 'Cross-Origin-Embedder-Policy', operation: 'remove' },
+        { header: 'Cross-Origin-Resource-Policy', operation: 'remove' },
+        { header: 'Permissions-Policy', operation: 'remove' }
+      ]
+    },
+    condition: {
+      initiatorDomains: [extensionId],
+      requestDomains: AI_FRAME_DOMAINS,
+      resourceTypes: ['sub_frame']
+    }
+  };
+}
+
+function configureAiFrameRule() {
+  return chrome.declarativeNetRequest.updateDynamicRules({
+    removeRuleIds: [AI_FRAME_RULE_ID],
+    addRules: [createAiFrameRule(chrome.runtime.id)]
+  });
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: 'send-to-gemini',
     title: 'AIにこのページ情報をコピーして開く',
     contexts: ['page', 'selection', 'action']
+  });
+
+  configureAiFrameRule().catch(error => {
+    console.error('Failed to configure AI frame rule:', error);
   });
 });
 
@@ -16,58 +69,78 @@ chrome.action.onClicked.addListener((tab) => {
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'send-to-gemini') {
     chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => {});
-    performExtraction(tab, info.selectionText);
+    void performExtraction(tab, info.selectionText);
   }
-});
-
-// コンテンツスクリプトからのメッセージ受信（将来的な拡張用）
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  return true; 
 });
 
 async function performExtraction(tab, selectionText) {
   try {
+    chrome.runtime.sendMessage({ action: 'SHOW_LOADING' }).catch(() => {});
+
     const { captureMode, textFormat } = await chrome.storage.sync.get({ captureMode: 'visible', textFormat: 'html' });
 
     let dataUrl = null;
 
     if (captureMode === 'fullpage') {
+      const markerName = `data-ai-bridge-${crypto.randomUUID()}`;
+      let setup = null;
+      let captureFailed = false;
+
       try {
-        const [{result: setup}] = await chrome.scripting.executeScript({
+        const [{result}] = await chrome.scripting.executeScript({
           target: { tabId: tab.id },
-          func: () => {
+          func: (marker) => {
              const html = document.documentElement;
              const body = document.body;
-             const width = Math.max(html.scrollWidth, body.scrollWidth);
+             const opacityMarker = `${marker}-opacity`;
+             const width = window.innerWidth;
              const height = Math.max(html.scrollHeight, body.scrollHeight);
-             
-             document.documentElement.style.overflow = 'hidden';
-             
-             // Hide sticky/fixed elements temporarily to avoid duplicates
-             const hiddenElements = [];
-             const treeWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
-             let currentNode = treeWalker.currentNode;
-             while(currentNode) {
-                const pos = window.getComputedStyle(currentNode).position;
-                if (pos === 'fixed' || pos === 'sticky') {
-                   hiddenElements.push(currentNode);
-                   currentNode.dataset.gbOriginalOpacity = currentNode.style.opacity;
-                   currentNode.style.opacity = '0';
-                }
-                currentNode = treeWalker.nextNode();
-             }
+             const originalOverflow = html.style.overflow;
+             const scrollX = window.scrollX;
+             const scrollY = window.scrollY;
 
-             return {
-               width, height,
-               windowHeight: window.innerHeight,
-               dpr: window.devicePixelRatio
-             };
-          }
+             try {
+               html.setAttribute(marker, 'active');
+               html.style.overflow = 'hidden';
+
+               // Hide sticky/fixed elements temporarily to avoid duplicates.
+               const treeWalker = document.createTreeWalker(body, NodeFilter.SHOW_ELEMENT);
+               let currentNode = treeWalker.currentNode;
+               while(currentNode) {
+                  const pos = window.getComputedStyle(currentNode).position;
+                  if (pos === 'fixed' || pos === 'sticky') {
+                     currentNode.setAttribute(opacityMarker, currentNode.style.opacity);
+                     currentNode.style.opacity = '0';
+                  }
+                  currentNode = treeWalker.nextNode();
+                }
+
+               return {
+                 width, height,
+                 windowHeight: window.innerHeight,
+                 dpr: window.devicePixelRatio,
+                 originalOverflow,
+                 scrollX,
+                 scrollY
+               };
+             } catch (error) {
+               document.querySelectorAll(`[${opacityMarker}]`).forEach(element => {
+                 element.style.opacity = element.getAttribute(opacityMarker) || '';
+                 element.removeAttribute(opacityMarker);
+               });
+               html.style.overflow = originalOverflow;
+               html.removeAttribute(marker);
+               throw error;
+             }
+          },
+          args: [markerName]
         });
 
+        setup = result;
         const { width, height, windowHeight, dpr } = setup;
         const canvas = new OffscreenCanvas(width * dpr, height * dpr);
         const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Could not create a 2D canvas context');
 
         let y = 0;
         while (y < height) {
@@ -80,40 +153,21 @@ async function performExtraction(tab, selectionText) {
             args: [y]
           });
 
-          await new Promise(r => setTimeout(r, 300));
+          await new Promise(resolve => setTimeout(resolve, CAPTURE_INTERVAL_MS));
 
-          const chunkDataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, {format: 'png'}).catch(() => null);
-          if (chunkDataUrl) {
-            const res = await fetch(chunkDataUrl);
-            const blob = await res.blob();
-            const bitmap = await createImageBitmap(blob);
-            // Draw image at the actual scroll position scaled by DPR
-            // Use windowHeight * dpr for source block instead? createImageBitmap makes it full raw size.
-            // We draw at destination y = actualY * dpr.
+          const chunkDataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, {format: 'png'});
+          const res = await fetch(chunkDataUrl);
+          const blob = await res.blob();
+          const bitmap = await createImageBitmap(blob);
+          try {
             ctx.drawImage(bitmap, 0, actualY * dpr);
+          } finally {
+            bitmap.close();
           }
 
           y += windowHeight;
           if (actualY + windowHeight >= height) break;
         }
-
-        // Restore
-        await chrome.scripting.executeScript({
-          target: {tabId: tab.id},
-          func: () => {
-             document.documentElement.style.overflow = '';
-             window.scrollTo(0, 0);
-             const treeWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
-             let currentNode = treeWalker.currentNode;
-             while(currentNode) {
-                if (currentNode.dataset.gbOriginalOpacity !== undefined) {
-                   currentNode.style.opacity = currentNode.dataset.gbOriginalOpacity;
-                   delete currentNode.dataset.gbOriginalOpacity;
-                }
-                currentNode = treeWalker.nextNode();
-             }
-          }
-        });
 
         const blob = await canvas.convertToBlob({type: 'image/png'});
         const reader = new FileReader();
@@ -124,6 +178,33 @@ async function performExtraction(tab, selectionText) {
 
       } catch (err) {
         console.warn('Fullpage capture failed, falling back to visible', err);
+        captureFailed = true;
+      } finally {
+        if (setup) {
+          await chrome.scripting.executeScript({
+            target: {tabId: tab.id},
+            func: (marker, originalOverflow, scrollX, scrollY) => {
+              const html = document.documentElement;
+              if (!html.hasAttribute(marker)) return;
+
+              const opacityMarker = `${marker}-opacity`;
+              document.querySelectorAll(`[${opacityMarker}]`).forEach(element => {
+                element.style.opacity = element.getAttribute(opacityMarker) || '';
+                element.removeAttribute(opacityMarker);
+              });
+              html.style.overflow = originalOverflow;
+              html.removeAttribute(marker);
+              window.scrollTo(scrollX, scrollY);
+            },
+            args: [markerName, setup.originalOverflow, setup.scrollX, setup.scrollY]
+          }).catch(error => {
+            console.warn('Failed to restore the page after capture:', error);
+          });
+        }
+      }
+
+      if (captureFailed) {
+        await new Promise(resolve => setTimeout(resolve, CAPTURE_INTERVAL_MS));
         dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, { format: 'png' }).catch(() => null);
       }
     } else {
@@ -133,7 +214,7 @@ async function performExtraction(tab, selectionText) {
       });
     }
 
-    const executePromise = chrome.scripting.executeScript({
+    const injectionResults = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: (format) => {
         const title = document.title;
@@ -143,11 +224,11 @@ async function performExtraction(tab, selectionText) {
         if (format === 'markdown') {
           // 簡易的なMarkdown化処理（タグ除去と構造の維持）
           const body = document.body.cloneNode(true);
-          
+
           // 不要な要素の削除
           const scripts = body.querySelectorAll('script, style, nav, footer, iframe, noscript');
           scripts.forEach(s => s.remove());
-          
+
           let text = "";
           const walk = (node) => {
             if (node.nodeType === 3) { // Text node
@@ -224,9 +305,6 @@ async function performExtraction(tab, selectionText) {
       return null;
     });
 
-    const [injectionResults] = await Promise.all([executePromise]);
-    // Note: capture is already done sequentially before this if fullpage, but that's fine.
-
     let payload = null;
     if (injectionResults && injectionResults[0] && injectionResults[0].result) {
       payload = injectionResults[0].result;
@@ -240,73 +318,68 @@ async function performExtraction(tab, selectionText) {
       };
     }
         
+    chrome.runtime.sendMessage({ action: 'SHOW_INJECTING' }).catch(() => {});
+
     // アクティブタブのスクリプト環境を借りてクリップボードに書き込む
-    chrome.scripting.executeScript({
+    const [{ result: clipboardResult }] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: (imgDataUrl, extractedData, format) => {
-        if (format === 'image') {
-          // 画像のみ取得モード
-          if (!imgDataUrl) {
-            console.warn('[AI-Bridge] Image data is missing in image-only mode');
-            return;
+      func: async (imgDataUrl, extractedData, format) => {
+        try {
+          if (format === 'image') {
+            if (!imgDataUrl) throw new Error('Image data is missing');
+
+            const response = await fetch(imgDataUrl);
+            const blob = await response.blob();
+            await navigator.clipboard.write([
+              new ClipboardItem({ [blob.type]: blob })
+            ]);
+            return { ok: true };
           }
-          fetch(imgDataUrl)
-            .then(res => res.blob())
-            .then(blob => {
-              const items = {};
-              items[blob.type] = blob;
-              return navigator.clipboard.write([new ClipboardItem(items)]);
-            })
-            .then(() => console.log('[AI-Bridge] Image only copied to clipboard'))
-            .catch(e => console.warn('[AI-Bridge] Clipboard write failed', e));
-          return;
-        }
 
-        let markdownText = `以下のページについて質問/指示があります。\n\n`;
-        markdownText += `**Title:** ${extractedData.title}\n**URL:** ${extractedData.url}\n\n`;
-        
-        if (extractedData.selection) {
-           markdownText += `**選択されたテキスト:**\n\`\`\`\n${extractedData.selection}\n\`\`\`\n\n`;
-        } else {
-           let label = 'HTMLソースコード';
-           let codeLang = 'html';
-           if (format === 'markdown') {
-             label = '抽出されたテキスト (Markdown形式)';
-             codeLang = '';
-           } else if (format === 'main') {
-             label = '抽出されたテキスト (本文のみ抽出)';
-             codeLang = '';
-           }
-           markdownText += `**${label}:**\n\`\`\`${codeLang}\n${extractedData.html}\n\`\`\`\n`;
-        }
+          let markdownText = `以下のページについて質問/指示があります。\n\n`;
+          markdownText += `**Title:** ${extractedData.title}\n**URL:** ${extractedData.url}\n\n`;
 
-        const clipboardItems = {};
-        clipboardItems['text/plain'] = new Blob([markdownText], { type: 'text/plain' });
-
-        if (imgDataUrl) {
-          fetch(imgDataUrl)
-            .then(res => res.blob())
-            .then(blob => {
-              clipboardItems[blob.type] = blob;
-              // Web APIの ClipboardItem は複数タイプのデータを同時格納できる
-              return navigator.clipboard.write([new ClipboardItem(clipboardItems)]);
-            })
-            .then(() => console.log('[AI-Bridge] Text and Image copied to clipboard'))
-            .catch(e => console.warn('[AI-Bridge] Clipboard write failed (usually expected on blur)', e));
-        } else {
-          try {
-            navigator.clipboard.write([new ClipboardItem(clipboardItems)])
-              .then(() => console.log('[AI-Bridge] Text copied to clipboard (No image)'));
-          } catch (err) {
-            console.error('Clipboard write failed:', err);
+          if (extractedData.selection) {
+             markdownText += `**選択されたテキスト:**\n\`\`\`\n${extractedData.selection}\n\`\`\`\n\n`;
+          } else {
+             let label = 'HTMLソースコード';
+             let codeLang = 'html';
+             if (format === 'markdown') {
+               label = '抽出されたテキスト (Markdown形式)';
+               codeLang = '';
+             } else if (format === 'main') {
+               label = '抽出されたテキスト (本文のみ抽出)';
+               codeLang = '';
+             }
+             markdownText += `**${label}:**\n\`\`\`${codeLang}\n${extractedData.html}\n\`\`\`\n`;
           }
+
+          const clipboardItems = {
+            'text/plain': new Blob([markdownText], { type: 'text/plain' })
+          };
+
+          if (imgDataUrl) {
+            const response = await fetch(imgDataUrl);
+            const blob = await response.blob();
+            clipboardItems[blob.type] = blob;
+          }
+
+          await navigator.clipboard.write([new ClipboardItem(clipboardItems)]);
+          return { ok: true };
+        } catch (error) {
+          return { ok: false, error: error instanceof Error ? error.message : String(error) };
         }
       },
       args: [dataUrl, payload, textFormat]
     });
 
+    if (!clipboardResult?.ok) {
+      throw new Error(clipboardResult?.error || 'Clipboard write failed');
+    }
+
     console.log('Extraction and clipboard copy complete.');
   } catch (error) {
     console.error('Extraction handling error:', error);
+    chrome.runtime.sendMessage({ action: 'SHOW_ERROR' }).catch(() => {});
   }
 }
