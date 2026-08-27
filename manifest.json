@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "AI-Bridge (Side Panel Edition)",
   "short_name": "AI-Bridge",
-  "version": "1.2.1",
-  "description": "閲覧中のページのソースコードとスクリーンショットを取得し、サイドパネルのGeminiへ転送します。",
+  "version": "1.2.2",
+  "description": "閲覧中のページのソースコードとスクリーンショットを取得し、サイドパネルのAIチャットへ橋渡しします。",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -14,13 +14,24 @@
     "contextMenus",
     "scripting",
     "activeTab",
-    "declarativeNetRequest",
     "declarativeNetRequestWithHostAccess",
     "clipboardWrite",
     "storage"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "https://gemini.google.com/*",
+    "https://chatgpt.com/*",
+    "https://claude.ai/*",
+    "https://grok.com/*",
+    "https://chat.deepseek.com/*",
+    "https://chat.qwen.ai/*",
+    "https://venice.ai/*",
+    "https://chat.webllm.ai/*",
+    "https://copilot.microsoft.com/*",
+    "https://duck.ai/*",
+    "https://duckduckgo.com/*",
+    "https://huggingface.co/*",
+    "https://tongyi.aliyun.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -29,16 +40,7 @@
   "side_panel": {
     "default_path": "side_panel.html"
   },
-  "declarative_net_request": {
-    "rule_resources": [
-      {
-        "id": "ruleset_1",
-        "enabled": true,
-        "path": "rules.json"
-      }
-    ]
-  },
   "action": {
-    "default_title": "Gemini表示"
+    "default_title": "AI-Bridgeを表示"
   }
 }

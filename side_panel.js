@@ -69,6 +69,14 @@ document.addEventListener('DOMContentLoaded', () => {
       .map(line => {
         const [name, ...urlParts] = line.split(',');
         return { name: name.trim(), url: urlParts.join(',').trim() };
+      })
+      .filter(({ name, url }) => {
+        if (!name) return false;
+        try {
+          return new URL(url).protocol === 'https:';
+        } catch {
+          return false;
+        }
       });
   }
 
@@ -177,6 +185,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 2000);
       sendResponse({ status: 'ok' });
     }
-    return true; 
+
+    if (message.action === 'SHOW_ERROR') {
+      overlay.style.display = 'flex';
+      overlay.style.opacity = '1';
+      statusText.textContent = "コピーに失敗しました。ページを再選択してください";
+      sendResponse({ status: 'ok' });
+    }
   });
 });
